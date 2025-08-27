@@ -72,16 +72,25 @@ export const useIfcLoader = (
 
       // UI Panel
       BUI.Manager.init();
-      const [panelElement] = BUI.Component.create(() => {
+      console.log(
+        BUI.Component.create(() => {
+          const loadBtn = BUI.html`<bim-button label="Load IFC" @click=${loadIfc}></bim-button>`;
+          return BUI.html`<bim-panel active label="IFC Loader">
+          <bim-panel-section>${loadBtn}</bim-panel-section>
+        </bim-panel>`;
+        }, {})
+      );
+
+      const [panel] = BUI.Component.create<BUI.PanelSection, {}>((_) => {
         const loadBtn = BUI.html`<bim-button label="Load IFC" @click=${loadIfc}></bim-button>`;
         return BUI.html`<bim-panel active label="IFC Loader">
           <bim-panel-section>${loadBtn}</bim-panel-section>
         </bim-panel>`;
       }, {});
 
-      console.log("panel is:", panelElement);
+      console.log("panel is:", panel);
 
-      document.body.append(panelElement);
+      document.body.append(panel);
 
       // Stats
       const stats = new Stats();
