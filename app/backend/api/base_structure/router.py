@@ -6,8 +6,8 @@ api_router = APIRouter(tags=["base_structure"])
 
 @api_router.get("/download")
 def download_ifc():
-    file_path = "base_structure.ifc" 
-    
+    file_path = os.path.join(os.path.dirname(__file__), "base_structure.ifc")
+
     if os.path.exists(file_path):
         return FileResponse(
             path=file_path,
