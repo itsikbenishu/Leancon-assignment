@@ -10,7 +10,12 @@ export default function IfcViewer() {
   return (
     <div
       ref={containerRef}
-      style={{ width: "100%", height: "100vh", backgroundColor: "#1e1e1e" }}
+      style={{
+        width: "100%",
+        height: "100vh",
+        backgroundColor: "#1e1e1e",
+        position: "relative",
+      }}
     />
   );
 }

@@ -15,7 +15,7 @@ function App() {
   return (
     <>
       <IfcViewer />
-      <div style={{ textAlign: "center", marginTop: "2em" }}>
+      {/* <div style={{ textAlign: "center", marginTop: "2em" }}>
         <h1>שלום לך!</h1>
         <input
           type="text"
@@ -25,7 +25,7 @@ function App() {
         />
         <button onClick={greet}>שלח</button>
         <p>{message}</p>
-      </div>
+      </div> */}
     </>
   );
 }
