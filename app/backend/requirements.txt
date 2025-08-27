@@ -1,0 +1,4 @@
+gunicorn
+sqlmodel
+fastapi[all]
+uvicorn
