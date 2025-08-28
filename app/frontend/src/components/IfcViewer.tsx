@@ -3,7 +3,7 @@ import { useIfcLoader } from "../hooks/useIfcLoader";
 
 export default function IfcViewer() {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const ifcApi = "http://localhost:8000/basic_structure/download";
+  const ifcApi = "/api/basic_structure/download";
 
   useIfcLoader(containerRef, ifcApi);
 

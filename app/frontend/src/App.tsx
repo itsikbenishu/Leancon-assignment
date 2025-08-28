@@ -7,7 +7,7 @@ function App() {
   const [message, setMessage] = useState("");
 
   const greet = async () => {
-    const res = await fetch(`http://localhost:8000/greet?name=${name}`);
+    const res = await fetch(`api/greet?name=${name}`);
     const data = await res.json();
     setMessage(data.message);
   };
