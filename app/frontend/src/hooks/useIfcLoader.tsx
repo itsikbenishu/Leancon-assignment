@@ -1,18 +1,65 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import type { RefObject } from "react";
 import * as OBC from "@thatopen/components";
 import * as BUI from "@thatopen/ui";
+import * as FRAGS from "@thatopen/fragments";
+import { useIfcDataTable } from "./useIfcDataTable";
 
 export const useIfcLoader = (
   containerRef: RefObject<HTMLDivElement | null>,
   ifcApi: string
 ): { loadIfc: () => Promise<void> } => {
   const componentsRef = useRef<OBC.Components | null>(null);
-  const panelRef = useRef<HTMLElement | null>(null);
+  const worldRef = useRef<OBC.World | null>(null);
+  const loaderPanelRef = useRef<HTMLElement | null>(null);
+  const quantitiesPanelRef = useRef<HTMLElement | null>(null);
+
+  // State לעקוב אחרי אתחול הרכיبים
+  const [componentsInitialized, setComponentsInitialized] = useState(false);
+
+  // שימוש ב-hook של טבלת הנתונים - עכשיו עם state
+  const dataTableHook = useIfcDataTable(
+    componentsInitialized ? componentsRef.current : null,
+    componentsInitialized ? worldRef.current : null
+  );
+
+  // יצירת פאנל הכמויות כשהרכיבים מוכנים
+  const createQuantitiesPanel = useCallback(() => {
+    if (!componentsInitialized || !dataTableHook) return;
+
+    console.log("Attempting to create quantities panel...");
+
+    // אתחול ההיילייטר
+    dataTableHook.initializeHighlighter();
+
+    // יצירת הפאנל
+    const quantitiesPanel = dataTableHook.createQuantitiesPanel();
+    if (quantitiesPanel && containerRef.current) {
+      quantitiesPanelRef.current = quantitiesPanel;
+      containerRef.current.appendChild(quantitiesPanel);
+      console.log("Quantities Panel appended successfully");
+    } else {
+      console.error("Failed to create or append quantities panel");
+    }
+  }, [componentsInitialized, dataTableHook, containerRef]);
+
+  // Effect ליצירת הפאנל כשהרכיבים מוכנים
+  useEffect(() => {
+    if (componentsInitialized) {
+      // קצת דיליי כדי לוודא שהכל מוכן
+      const timer = setTimeout(() => {
+        createQuantitiesPanel();
+      }, 200);
+
+      return () => clearTimeout(timer);
+    }
+  }, [componentsInitialized, createQuantitiesPanel]);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
+
+    console.log("Container exists:", container);
 
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0];
@@ -35,6 +82,7 @@ export const useIfcLoader = (
 
             const worlds = components.get(OBC.Worlds);
             const world = worlds.create();
+            worldRef.current = world;
 
             const scene = new OBC.SimpleScene(components);
             scene.setup();
@@ -98,14 +146,18 @@ export const useIfcLoader = (
 
             BUI.Manager.init();
 
-            const loadIfcHandler = () => {
-              console.log("Load IFC button clicked");
-              loadIfc();
-            };
+            // פאנל ה-IFC Loader (למעלה מימין)
+            const [loaderPanel] = BUI.Component.create<BUI.Panel, {}>((_) => {
+              const loadIfcHandler = () => {
+                console.log("Load IFC button clicked");
+                loadIfc();
+              };
 
-            const [panel] = BUI.Component.create<BUI.Panel, {}>((_) => {
               return BUI.html`
-                <bim-panel active label="IFC Loader" style="position: absolute; top: 10px; right: 10px; z-index: 1000;">
+                <bim-panel 
+                  active 
+                  label="IFC Loader" 
+                  style="position: absolute; top: 10px; right: 10px; z-index: 1000;">
                   <bim-panel-section>
                     <bim-button label="Load IFC" @click=${loadIfcHandler}></bim-button>
                   </bim-panel-section>
@@ -113,9 +165,13 @@ export const useIfcLoader = (
               `;
             }, {});
 
-            panelRef.current = panel;
-            container.appendChild(panel);
-            console.log("Panel appended");
+            loaderPanelRef.current = loaderPanel;
+            container.appendChild(loaderPanel);
+            console.log("Loader Panel appended");
+
+            // סימון שהרכיבים אותחלו
+            setComponentsInitialized(true);
+            console.log("Components initialization completed");
           } catch (error) {
             console.error("Error initializing components:", error);
           }
@@ -129,8 +185,13 @@ export const useIfcLoader = (
 
     return () => {
       observer.disconnect();
-      if (panelRef.current && panelRef.current.parentNode) {
-        panelRef.current.parentNode.removeChild(panelRef.current);
+      if (loaderPanelRef.current && loaderPanelRef.current.parentNode) {
+        loaderPanelRef.current.parentNode.removeChild(loaderPanelRef.current);
+      }
+      if (quantitiesPanelRef.current && quantitiesPanelRef.current.parentNode) {
+        quantitiesPanelRef.current.parentNode.removeChild(
+          quantitiesPanelRef.current
+        );
       }
       if (componentsRef.current) {
         try {
@@ -166,7 +227,6 @@ export const useIfcLoader = (
         buffer.length
       );
 
-      // טוען את המודל
       await ifcLoader.load(buffer, false, "model", {
         processData: {
           progressCallback: (progress) => {
@@ -177,6 +237,9 @@ export const useIfcLoader = (
 
       console.log("IFC load() promise resolved successfully");
       console.log("IFC load completed");
+
+      // כאן תוכל להוסיף לוגיקה לעדכון נתוני הטבלה מהמודל שנטען
+      // לדוגמה: לחלץ נתונים אמיתיים מה-FragmentsManager
     } catch (err) {
       console.error("Error loading IFC:", err);
     }

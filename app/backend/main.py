@@ -20,9 +20,5 @@ app.add_middleware(
 
 app.include_router(base_structure_api_router, prefix="/basic_structure")
 
-@app.get("/greet")
-def greet(name: str = "עולם"):
-    return {"message": f"שלום, {name}!"}
-
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
