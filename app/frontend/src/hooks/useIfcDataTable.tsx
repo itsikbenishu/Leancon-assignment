@@ -98,7 +98,6 @@ export const useIfcDataTable = (
           }
           data.push({ data: flatRow });
         }
-        console.log(data);
 
         return data;
       };
